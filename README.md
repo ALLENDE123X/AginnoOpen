@@ -25,8 +25,8 @@ This is the first step toward a larger vision: building autonomous, modular, and
 ## 🚀 Getting Started
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/aginno-open
-cd aginno-open
+git clone https://github.com/ALLENDE123X/AginnoOpen.git
+cd AginnoOpen
 npm install
 
 # Add your API keys to .env.local
