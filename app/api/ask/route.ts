@@ -23,11 +23,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Generate research response using GPT
-    const researchResponse = await generateResearchResponse(query, searchResults);
-
-    // 3. Return the response
-    return NextResponse.json({ response: researchResponse });
+    // 2. Generate research response using Claude
+    try {
+      const researchResponse = await generateResearchResponse(query, searchResults);
+      // 3. Return the response
+      return NextResponse.json({ response: researchResponse });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to generate research response";
+      // Check if it's the daily limit error
+      if (errorMessage.includes("Daily message limit")) {
+        return NextResponse.json(
+          { error: errorMessage },
+          { status: 429 } // Too Many Requests status
+        );
+      }
+      throw err; // Re-throw for general error handling
+    }
   } catch (error) {
     console.error("Error in /api/ask route:", error);
     return NextResponse.json(

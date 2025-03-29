@@ -1,70 +1,67 @@
-# Aginno Open
+# AI Research Agent
 
-A general-purpose AI agent framework, starting with an intelligent web research assistant. Powered by GPT-4 and Serper.dev.
+A full-stack AI project that acts as a B2C AI agent for performing internet research tasks based on user input.
 
-## 🧠 Project Overview
+## Tech Stack
 
-Aginno Open is an open-source initiative to build general-purpose AI agents.
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Backend Logic**: API routes
+- **AI**: Anthropic Claude 3.5 Sonnet API (with 30 messages per day limit for demo)
+- **Web Search**: Serper.dev
 
-This repository contains the MVP implementation of a task-specific agent: a web-based research assistant powered by GPT-4 and real-time search results via Serper.dev.
+## Features
 
-The current version allows users to type in any research request (e.g., "What are the best dividend-paying stocks under $50?"), and receive a markdown-formatted answer compiled from web search results and summarized by an AI agent using a ReAct-style prompt.
+- User-friendly interface for submitting research queries
+- Integration with Claude 3.5 Sonnet for intelligent responses
+- Web search capabilities using Serper.dev
+- Markdown rendering of AI responses
+- Demo mode with 30 message per day limit for cost control
 
-This is the first step toward a larger vision: building autonomous, modular, and tool-augmented AI agents that can complete a wide range of user-defined tasks.
+## Setup
 
-## 🛠️ Tech Stack
+1. Clone this repository
+2. Install dependencies:
+   ```bash
+   npm install --legacy-peer-deps
+   ```
+3. Copy the environment variables example file:
+   ```bash
+   cp .env.local.example .env.local
+   ```
+4. Update `.env.local` with your API keys:
+   - Get an Anthropic API key from [https://console.anthropic.com/](https://console.anthropic.com/)
+   - Get a Serper API key from [https://serper.dev](https://serper.dev)
 
-- Next.js 14 (App Router)
-- TypeScript
-- Tailwind CSS
-- OpenAI GPT-4 Turbo
-- Serper.dev (Google Search API)
-- V0.dev for frontend scaffolding
-- Cursor.sh for backend agent development
+5. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
-## 🚀 Getting Started
+6. Open [http://localhost:3000](http://localhost:3000) in your browser to see the app running.
 
-```bash
-git clone https://github.com/ALLENDE123X/AginnoOpen.git
-cd AginnoOpen
-npm install
+## Message Limits
 
-# Add your API keys to .env.local
-touch .env.local
+This application implements a limit of 30 messages per day for the demo version. This limit is reset daily and is tracked on the server side. When the limit is reached, users will receive a 429 error message letting them know they've reached the daily limit.
+
+## Project Structure
+
+```
+/
+├── /app
+│   ├── /api
+│   │   └── ask/route.ts       # API route that handles user queries
+│   └── page.tsx               # Main UI page
+├── /components
+│   ├── AgentOutput.tsx        # Renders markdown output
+│   └── LoadingSpinner.tsx     # Shows when agent is "thinking"
+├── /utils
+│   ├── search.ts              # Serper.dev wrapper
+│   ├── prompt.ts              # Claude prompt construction
+│   └── llm.ts                 # Anthropic Claude interaction with message limiting
 ```
 
-```env
-OPENAI_API_KEY=your-openai-key
-SERPER_API_KEY=your-serper-key
-```
+## Deployment
 
-```bash
-npm run dev
-# Open http://localhost:3000
-```
-
-## 🧪 Current Features
-
-✅ Simple text input for user research requests
-✅ GPT-4 ReAct-style prompting
-✅ Web search results via Serper.dev
-✅ Markdown output (bullets, links, reflection)
-✅ Clean UI via V0.dev export
-✅ Modular file structure for easy expansion
-
-## 🧭 Project Roadmap
-
-☑️ MVP: Research agent (done)
-🔄 Tool expansion (e.g., calculators, summarizers, file readers)
-🔄 Add planning memory + reflection loop
-🔄 Multi-turn tasks with goals/subgoals
-🔄 Model switching based on task type
-🔄 Agent "personality" profiles and skill templates
-🔄 User accounts and agent history
-🔄 Agent marketplace and sharing
-
-## 🤝 Contributing
-
-We welcome community contributions as we expand beyond the MVP.
-
-Feel free to submit PRs, bug reports, or ideas in the issues tab. We aim to make this the go-to open agentic framework for developers building helpful assistants. 
+This project can be easily deployed to Vercel. Simply connect your repository to Vercel and set the environment variables in the Vercel dashboard. 

@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Loader2 } from "lucide-react"
+import { Loader2, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
@@ -11,6 +11,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { cn } from "@/lib/utils"
 import { AgentOutput } from "@/components/AgentOutput"
 import { LoadingSpinner } from "@/components/LoadingSpinner"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 export default function Home() {
   const [query, setQuery] = useState("")
@@ -78,13 +79,27 @@ export default function Home() {
       <main className="flex-1 container mx-auto px-4 py-8 max-w-3xl">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-2">
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="e.g. Compare the best productivity tools for students"
-              className="flex-1 text-base py-6 px-4"
-              disabled={isLoading}
-            />
+            <div className="flex-1 relative">
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="e.g. Compare the best productivity tools for students"
+                className="flex-1 text-base py-6 px-4"
+                disabled={isLoading}
+              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <Info size={16} className="text-muted-foreground" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Limited to 30 queries per day in this demo</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <div className="flex gap-2">
               <Button type="submit" size="lg" disabled={isLoading}>
                 {isLoading ? (
@@ -111,6 +126,10 @@ export default function Home() {
 
         <div className="mt-8">
           <h2 className="text-lg font-medium mb-2">{isLoading ? "Researching your request..." : "Agent's Response"}</h2>
+          
+          <div className="text-xs text-muted-foreground mb-2">
+            Using Claude 3.5 Sonnet API (Demo: Limited to 30 queries per day)
+          </div>
 
           <Card className={cn("p-6 min-h-[300px] transition-all", isLoading && "bg-muted/50")}>
             {isLoading ? (
