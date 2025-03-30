@@ -67,48 +67,4 @@ npm run dev
 
 We welcome community contributions as we expand beyond the MVP.
 
-Feel free to submit PRs, bug reports, or ideas in the issues tab. We aim to make this the go-to open agentic framework for developers building helpful assistants.
-
-## Deployment Guide
-
-### Vercel Deployment
-
-1. Fork this repository on GitHub
-2. Connect Vercel to your GitHub account
-3. Create a new project on Vercel linked to your forked repository
-4. Add the following environment variables in Vercel project settings:
-   - `OPENAI_API_KEY` - Your OpenAI API key from [OpenAI Platform](https://platform.openai.com/api-keys)
-   - `SERPER_API_KEY` - Your Serper.dev API key from [Serper.dev](https://serper.dev/)
-   - `ANTHROPIC_API_KEY` - Your Anthropic API key from [Anthropic Console](https://console.anthropic.com/)
-5. Deploy the project
-
-### Local Development
-
-1. Install dependencies:
-   ```bash
-   pnpm install
-   ```
-
-2. Create a `.env.local` file with your API keys:
-   ```
-   OPENAI_API_KEY=your_openai_api_key
-   SERPER_API_KEY=your_serper_api_key
-   ANTHROPIC_API_KEY=your_anthropic_api_key
-   ```
-
-3. Start the development server:
-   ```bash
-   pnpm run dev
-   ```
-
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Dependencies
-
-This project uses:
-- Next.js 15
-- React 19
-- Tailwind CSS
-- OpenAI API
-- Anthropic API
-- Serper API for web search 
+Feel free to submit PRs, bug reports, or ideas in the issues tab. We aim to make this the go-to open agentic framework for developers building helpful assistants. 

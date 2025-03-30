@@ -7,9 +7,9 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Aginno Open - General Purpose AI Agent",
-  description: "First iteration of a general purpose AI agent with analysis, planning, and web search capabilities",
-  generator: 'v0.dev'
+  title: "Research Agent - Your AI Research Assistant",
+  description: "Your personal AI assistant for deep web research",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
