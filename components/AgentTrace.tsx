@@ -9,7 +9,58 @@ interface AgentTraceProps {
   isLoading: boolean;
 }
 
-export const AgentTrace: React.FC<AgentTraceProps> = ({ traceSteps, isLoading }) => {
+interface TraceStepProps {
+  step: AgentTraceStep;
+  index: number;
+}
+
+export const TraceStep: React.FC<TraceStepProps> = ({ 
+  step, 
+  index 
+}) => {
+  return (
+    <div className="border rounded p-3 bg-card">
+      <div className="flex justify-between items-center mb-2">
+        <h4 className="text-sm font-medium">Step {index + 1}</h4>
+        <span className="text-xs text-muted-foreground">
+          {new Date().toLocaleTimeString()}
+        </span>
+      </div>
+      
+      <div className="space-y-2 text-sm">
+        <div>
+          <span className="font-medium">💭 Thought:</span> {step.thought}
+        </div>
+        
+        <div className="flex flex-col">
+          <div className="flex items-start gap-1">
+            <span className="font-medium">🔍 Action:</span> {step.action}
+          </div>
+          {step.tool && (
+            <div className="mt-1 ml-5 text-xs px-2 py-1 bg-secondary inline-flex self-start rounded-full">
+              <span>Tool: {step.tool}</span>
+            </div>
+          )}
+        </div>
+        
+        <div>
+          <span className="font-medium">📖 Observation:</span> {step.observation}
+        </div>
+        
+        {step.reflection && (
+          <div>
+            <span className="font-medium">🔄 Reflection:</span>
+            <div className="whitespace-pre-wrap mt-1 border-l-2 pl-3 py-1 text-xs">
+              {step.reflection}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export const AgentTrace: React.FC<AgentTraceProps> & { TraceStep: React.FC<TraceStepProps> } = ({ traceSteps, isLoading }) => {
   return (
     <div className="space-y-4 py-2">
       <h3 className="text-md font-medium">Agent Trace</h3>
@@ -38,41 +89,4 @@ export const AgentTrace: React.FC<AgentTraceProps> = ({ traceSteps, isLoading })
   );
 };
 
-const TraceStep: React.FC<{ step: AgentTraceStep; index: number }> = ({ 
-  step, 
-  index 
-}) => {
-  return (
-    <div className="border rounded p-3 bg-card">
-      <div className="flex justify-between items-center mb-2">
-        <h4 className="text-sm font-medium">Step {index + 1}</h4>
-        <span className="text-xs text-muted-foreground">
-          {new Date().toLocaleTimeString()}
-        </span>
-      </div>
-      
-      <div className="space-y-2 text-sm">
-        <div>
-          <span className="font-medium">💭 Thought:</span> {step.thought}
-        </div>
-        
-        <div>
-          <span className="font-medium">🔍 Action:</span> {step.action}
-        </div>
-        
-        <div>
-          <span className="font-medium">📖 Observation:</span> {step.observation}
-        </div>
-        
-        {step.reflection && (
-          <div>
-            <span className="font-medium">🔄 Reflection:</span>
-            <div className="whitespace-pre-wrap mt-1 border-l-2 pl-3 py-1 text-xs">
-              {step.reflection}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}; 
+AgentTrace.TraceStep = TraceStep; 

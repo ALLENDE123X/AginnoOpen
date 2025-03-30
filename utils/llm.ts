@@ -3,6 +3,7 @@ import { constructPrompt } from "./prompt";
 import OpenAI from "openai";
 import { AgentResponse, AgentTraceStep } from "./types";
 import { performSearch } from "./search";
+import { addTraceStep } from "@/app/api/trace/route";
 
 // Initialize OpenAI client
 const initOpenAI = () => {
@@ -22,7 +23,8 @@ const initOpenAI = () => {
  */
 export async function generateResearchResponse(
   query: string,
-  initialSearchResults: SearchResult[]
+  initialSearchResults: SearchResult[],
+  chatId?: string
 ): Promise<AgentResponse> {
   const openai = initOpenAI();
   const traceSteps: AgentTraceStep[] = [];
@@ -31,8 +33,13 @@ export async function generateResearchResponse(
   const planningStep = await generatePlanningStep(openai, query, initialSearchResults);
   traceSteps.push(planningStep);
   
+  // Send real-time update if chatId is provided
+  if (chatId) {
+    addTraceStep(chatId, planningStep);
+  }
+  
   // Step 2: Iterative tool use - Perform multiple searches as needed
-  const iterativeSteps = await performIterativeResearch(openai, query, planningStep.reflection || '', traceSteps);
+  const iterativeSteps = await performIterativeResearch(openai, query, planningStep.reflection || '', traceSteps, chatId);
   
   // Step 3: Generate final output with reflection
   const finalOutput = await generateFinalOutput(openai, query, traceSteps);
@@ -81,7 +88,8 @@ Create a plan for how you'll approach this research question. What are the key a
     thought: "I need to plan how to approach this research question.",
     action: `Initial planning for query: "${query}"`,
     observation: "Received initial search results and created a research plan.",
-    reflection: plan
+    reflection: plan,
+    tool: "Planning"
   };
 }
 
@@ -92,7 +100,8 @@ async function performIterativeResearch(
   openai: OpenAI,
   originalQuery: string,
   plan: string,
-  traceSteps: AgentTraceStep[]
+  traceSteps: AgentTraceStep[],
+  chatId?: string
 ): Promise<void> {
   // We'll do up to 3 iterations of search and refinement
   for (let i = 0; i < 3; i++) {
@@ -104,9 +113,15 @@ async function performIterativeResearch(
       thought: `I need to search for more specific information about this topic.`,
       action: `Searching for: "${refinedQuery}"`,
       observation: "Waiting for search results...",
+      tool: "Web Search"
     };
     
     traceSteps.push(searchStep);
+    
+    // Send real-time update if chatId is provided
+    if (chatId) {
+      addTraceStep(chatId, searchStep);
+    }
     
     try {
       // Execute the search
@@ -115,9 +130,19 @@ async function performIterativeResearch(
       // Update the observation with search results
       searchStep.observation = `Found ${searchResults.length} results for refined query.`;
       
+      // Send real-time update with updated observation if chatId is provided
+      if (chatId) {
+        addTraceStep(chatId, searchStep);
+      }
+      
       // Analyze the results and determine if they're helpful
       const analysisStep = await analyzeSearchResults(openai, refinedQuery, searchResults, traceSteps);
       traceSteps.push(analysisStep);
+      
+      // Send real-time update if chatId is provided
+      if (chatId) {
+        addTraceStep(chatId, analysisStep);
+      }
       
       // If the analysis indicates we have enough information, break the loop
       if (analysisStep.reflection?.includes("sufficient information") || 
@@ -127,6 +152,12 @@ async function performIterativeResearch(
     } catch (error) {
       console.error("Error during search iteration:", error);
       searchStep.observation = "Error occurred during search.";
+      
+      // Send real-time update with error if chatId is provided
+      if (chatId) {
+        addTraceStep(chatId, searchStep);
+      }
+      
       break;
     }
   }
@@ -219,7 +250,8 @@ or should we search for something else?
     thought: "I need to evaluate if these search results are helpful for my research.",
     action: `Analyzing results from query: "${query}"`,
     observation: `Analyzed ${searchResults.length} search results for relevance.`,
-    reflection: analysis
+    reflection: analysis,
+    tool: "Analysis"
   };
 }
 

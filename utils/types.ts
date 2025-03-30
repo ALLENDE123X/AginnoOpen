@@ -6,6 +6,7 @@ export interface AgentTraceStep {
   action: string;
   observation: string;
   reflection?: string;
+  tool?: string;  // The tool used in this step (e.g., "Web Search", "Planning")
 }
 
 // Complete agent response including all trace steps and final output
