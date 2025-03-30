@@ -244,7 +244,7 @@ export default function Home() {
                   <h3 className="font-medium text-foreground">Response Quality</h3>
                   <p>
                     Responses are not the most in-depth as the agent uses a miniature model (GPT-4o Turbo Mini) for cost efficiency. 
-                    This is meant to serve as a proof of concept for more sophisticated AI research agents.
+                    This is meant to serve as a proof of concept for more sophisticated general-purpose AI agents.
                   </p>
                 </div>
                 
@@ -252,7 +252,7 @@ export default function Home() {
                   <h3 className="font-medium text-foreground">Agent Trace</h3>
                   <p>
                     You can view the agent's reasoning process by clicking on the "Agent Trace" tab after receiving a response. 
-                    This shows you the step-by-step thinking and actions taken by the AI.
+                    This shows you the step-by-step thinking and actions taken by the Agent.
                   </p>
                 </div>
               </div>
