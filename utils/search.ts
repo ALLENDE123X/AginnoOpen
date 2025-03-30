@@ -38,10 +38,16 @@ export async function performSearch(query: string): Promise<SearchResult[]> {
     return generateMockResults(query);
   }
 
+  // Remove any surrounding quotes from the query
+  const cleanedQuery = query.replace(/^["'](.*)["']$/, '$1');
+  
   // Try up to 3 times
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      console.log(`Search attempt ${attempt} for query: "${query}"`);
+      console.log(`Search attempt ${attempt} for query: "${cleanedQuery}"`);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // Increased timeout to 20 seconds
       
       const response = await fetch("https://google.serper.dev/search", {
         method: "POST",
@@ -50,22 +56,26 @@ export async function performSearch(query: string): Promise<SearchResult[]> {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          q: query,
+          q: cleanedQuery,
           gl: "us",
           hl: "en",
           num: 10,
         }),
-        // Add timeout to prevent hanging requests
-        signal: AbortSignal.timeout(10000) // 10 second timeout
+        // Use the controller's signal for aborting the request
+        signal: controller.signal
       });
+      
+      // Clear the timeout to prevent memory leaks
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`Search API error (attempt ${attempt}): ${response.status} ${errorText}`);
         
         if (attempt === 3) {
+          console.log(`All attempts failed for query: "${cleanedQuery}", using mock results`);
           // On final attempt, use mock results instead of failing
-          return generateMockResults(query);
+          return generateMockResults(cleanedQuery);
         }
         
         // Wait before retrying (exponential backoff)
@@ -75,30 +85,40 @@ export async function performSearch(query: string): Promise<SearchResult[]> {
 
       const data = (await response.json()) as SearchResponse;
       
+      // Log the full response for debugging when organic results array is missing or empty
       if (!data.organic || data.organic.length === 0) {
-        console.warn(`Search returned no results for query: "${query}"`);
+        console.warn(`Search returned no results for query: "${cleanedQuery}"`);
+        console.log("Full search response:", JSON.stringify(data));
+        
         if (attempt === 3) {
-          return generateMockResults(query);
+          console.log(`All attempts returned no results for query: "${cleanedQuery}", using mock results`);
+          return generateMockResults(cleanedQuery);
         }
         continue;
       }
       
+      console.log(`Successfully found ${data.organic.length} results for query: "${cleanedQuery}"`);
       return data.organic || [];
-    } catch (error) {
-      console.error(`Search error (attempt ${attempt}):`, error);
-      
-      if (attempt === 3) {
-        // On final attempt, use mock results instead of failing
-        return generateMockResults(query);
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.error(`Search request timed out (attempt ${attempt}) for query: "${cleanedQuery}"`);
+      } else {
+        console.error(`Search error (attempt ${attempt}) for query: "${cleanedQuery}":`, error);
       }
       
-      // Wait before retrying
-      await new Promise(r => setTimeout(r, attempt * 1000));
+      if (attempt === 3) {
+        console.log(`All attempts failed for query: "${cleanedQuery}", using mock results`);
+        // On final attempt, use mock results instead of failing
+        return generateMockResults(cleanedQuery);
+      }
+      
+      // Wait before retrying with exponential backoff
+      await new Promise(r => setTimeout(r, attempt * 1500));
     }
   }
   
   // Should never reach here but TypeScript requires a return
-  return generateMockResults(query);
+  return generateMockResults(cleanedQuery);
 }
 
 /**

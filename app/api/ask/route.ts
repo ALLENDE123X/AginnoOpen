@@ -5,7 +5,7 @@ import { createChat, addAgentResponseToChat, addUserMessageToChat, getChat, getL
 import { AgentResponse } from "@/utils/types";
 
 // Set a timeout for the entire request
-const REQUEST_TIMEOUT = 90000; // 90 seconds
+const REQUEST_TIMEOUT = 180000; // Increased from 90000 to 180000 (3 minutes)
 
 export async function POST(request: NextRequest) {
   try {

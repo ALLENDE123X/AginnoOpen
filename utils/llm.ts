@@ -113,6 +113,9 @@ async function performIterativeResearch(
   traceSteps: AgentTraceStep[],
   maxIterations: number = 3
 ): Promise<void> {
+  // Keep track of unsuccessful searches
+  let consecutiveFailures = 0;
+  
   // We'll do up to 3 iterations of search and refinement
   for (let i = 0; i < maxIterations; i++) {
     // Generate a refined search query based on previous steps
@@ -131,8 +134,28 @@ async function performIterativeResearch(
       // Execute the search
       const searchResults = await performSearch(refinedQuery);
       
-      // Update the observation with search results
-      searchStep.observation = `Found ${searchResults.length} results for refined query.`;
+      // Check if we got real results or mock results (mock results all have example domains)
+      const hasMockResults = searchResults.every(result => 
+        result.link.includes('example.com') || 
+        result.link.includes('example.org') || 
+        result.link.includes('example.net') || 
+        result.link.includes('wikipedia.org/wiki/example')
+      );
+      
+      if (hasMockResults) {
+        consecutiveFailures++;
+        searchStep.observation = `Search returned no real results (using generated placeholders instead).`;
+        
+        // If we've had too many failures, break the loop
+        if (consecutiveFailures >= 2) {
+          searchStep.observation += ` After multiple search failures, proceeding with available information.`;
+          break;
+        }
+      } else {
+        // Reset failure counter on successful search
+        consecutiveFailures = 0;
+        searchStep.observation = `Found ${searchResults.length} results for refined query.`;
+      }
       
       // Analyze the results and determine if they're helpful
       const analysisStep = await analyzeSearchResults(openai, refinedQuery, searchResults, traceSteps);
@@ -146,7 +169,13 @@ async function performIterativeResearch(
     } catch (error) {
       console.error("Error during search iteration:", error);
       searchStep.observation = "Error occurred during search.";
-      break;
+      consecutiveFailures++;
+      
+      // If we've had too many failures, break the loop
+      if (consecutiveFailures >= 2) {
+        searchStep.observation += ` After multiple search failures, proceeding with available information.`;
+        break;
+      }
     }
   }
 }
@@ -172,7 +201,12 @@ ${traceContext}
 Based on the research so far, generate a refined search query that will help gather more specific 
 information. The new query should be more targeted and help fill gaps in the current research.
 
-Output only the new search query text without any other explanation.
+IMPORTANT: Output only the plain search query text. Do not include any quotation marks, brackets,
+or other special characters around your query. Just provide the raw search terms.
+
+For example:
+Good: Atlanta best public high schools 2023 rankings
+Bad: "Atlanta best public high schools 2023 rankings"
 `;
 
   const response = await openai.chat.completions.create({
@@ -180,7 +214,7 @@ Output only the new search query text without any other explanation.
     messages: [
       {
         role: "system",
-        content: "You are a helpful research agent that generates refined search queries.",
+        content: "You are a helpful research agent that generates refined search queries. You always output just the plain search query without any quotation marks or other decorations.",
       },
       {
         role: "user",
@@ -190,7 +224,11 @@ Output only the new search query text without any other explanation.
     temperature: 0.7,
   });
 
-  return response.choices[0]?.message?.content?.trim() || originalQuery;
+  // Strip any quotes that might still be present in the response
+  let refinedQuery = response.choices[0]?.message?.content?.trim() || originalQuery;
+  refinedQuery = refinedQuery.replace(/^["'](.*)["']$/, '$1');
+  
+  return refinedQuery;
 }
 
 /**
@@ -202,12 +240,26 @@ async function analyzeSearchResults(
   searchResults: SearchResult[],
   traceSteps: AgentTraceStep[]
 ): Promise<AgentTraceStep> {
+  // Check if these are mock results
+  const hasMockResults = searchResults.every(result => 
+    result.link.includes('example.com') || 
+    result.link.includes('example.org') || 
+    result.link.includes('example.net') || 
+    result.link.includes('wikipedia.org/wiki/example')
+  );
+
   const resultsContext = searchResults.map((r, i) => 
     `Result ${i+1}:\nTitle: ${r.title}\nURL: ${r.link}\nSnippet: ${r.snippet}`
   ).join('\n\n');
   
+  const mockResultsWarning = hasMockResults ? 
+    `NOTE: The search returned no actual results from the web. The results below are generated placeholders. 
+    You should continue searching with different terms or consider that the information may not be readily available online.` : '';
+  
   const analysisPrompt = `
 Search query: "${query}"
+
+${mockResultsWarning}
 
 Search results:
 ${resultsContext}
@@ -234,10 +286,14 @@ or should we search for something else?
 
   const analysis = response.choices[0]?.message?.content || "No analysis generated.";
   
+  const observation = hasMockResults ? 
+    `Analyzed ${searchResults.length} placeholder results (no actual search results were found).` :
+    `Analyzed ${searchResults.length} search results for relevance.`;
+  
   return {
     thought: "I need to evaluate if these search results are helpful for my research.",
     action: `Analyzing results from query: "${query}"`,
-    observation: `Analyzed ${searchResults.length} search results for relevance.`,
+    observation: observation,
     reflection: analysis
   };
 }
