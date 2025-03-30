@@ -220,7 +220,7 @@ export default function Home() {
               </p>
               <p className="text-sm font-medium">
                 Note: If the chat randomly stops working, it's likely due to exceeding the API limit. 
-                Please send a DM on LinkedIn for a quick fix.
+                Please <a href="https://www.linkedin.com/in/pranav-lende/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">send me a DM</a> for a quick fix.
               </p>
             </Card>
             
