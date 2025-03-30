@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { performSearch } from "@/utils/search";
 import { generateResearchResponse } from "@/utils/llm";
-import { createChat, updateChat, getChat } from "@/utils/chatStore";
+import { createChat, addAgentResponseToChat, addUserMessageToChat, getChat, getLatestUserMessage } from "@/utils/chatStore";
 import { AgentResponse } from "@/utils/types";
 
 // Set a timeout for the entire request
@@ -21,8 +21,16 @@ export async function POST(request: NextRequest) {
 
     console.log(`Processing query: "${query}"`);
 
-    // Create a new chat or use the existing one
-    const currentChatId = chatId || createChat(query);
+    // Create a new chat or add the message to an existing one
+    let currentChatId = chatId;
+    
+    if (currentChatId) {
+      // Add the new user message to the existing chat
+      addUserMessageToChat(currentChatId, query);
+    } else {
+      // This is a new chat - create it
+      currentChatId = createChat(query);
+    }
 
     try {
       // Create a promise that will resolve with the API response
@@ -50,7 +58,7 @@ export async function POST(request: NextRequest) {
         finalOutput: "I apologize, but I encountered an error while processing your request. Please try again with a more specific query or check your internet connection."
       };
       
-      updateChat(currentChatId, errorResponse);
+      addAgentResponseToChat(currentChatId, errorResponse);
       
       return NextResponse.json({
         chatId: currentChatId,
@@ -77,15 +85,35 @@ async function processQuery(query: string, chatId: string) {
 
   console.log(`Search returned ${searchResults.length} results`);
   
+  // Get the chat to check if this is a follow-up question
+  const chat = getChat(chatId);
+  let context = "";
+  
+  if (chat && chat.messages.length > 1) {
+    // This is a follow-up question, so we should include previous conversation context
+    // Format a simple context from the last few messages (up to 3 exchanges)
+    const recentMessages = chat.messages.slice(-6); // Last 3 exchanges (up to 6 messages)
+    
+    context = recentMessages.map(msg => {
+      if (msg.isUser) {
+        return `User: ${msg.content}`;
+      } else {
+        return `Assistant: ${msg.content}`;
+      }
+    }).join('\n\n');
+    
+    console.log("Including context from previous messages");
+  }
+  
   // Proceed even if no search results are found - our modified search function returns mock results
   console.time('generate-response');
   // 2. Generate research response using ReAct-style agent loop
-  const agentResponse = await generateResearchResponse(query, searchResults);
+  const agentResponse = await generateResearchResponse(query, searchResults, context);
   console.timeEnd('generate-response');
 
   console.time('update-chat');
-  // 3. Update the chat with the final response
-  updateChat(chatId, agentResponse);
+  // 3. Update the chat with the agent response
+  addAgentResponseToChat(chatId, agentResponse);
   console.timeEnd('update-chat');
 
   // 4. Return the response with the chat ID

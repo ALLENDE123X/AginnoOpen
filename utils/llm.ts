@@ -4,36 +4,26 @@ import OpenAI from "openai";
 import { AgentResponse, AgentTraceStep } from "./types";
 import { performSearch } from "./search";
 
-// Global OpenAI client to avoid re-initialization
-let openaiClient: OpenAI | null = null;
-
 // Initialize OpenAI client
 const initOpenAI = () => {
-  if (openaiClient) return openaiClient;
-  
   const apiKey = process.env.OPENAI_API_KEY;
   
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is not defined in environment variables");
   }
   
-  openaiClient = new OpenAI({
+  return new OpenAI({
     apiKey,
   });
-  
-  return openaiClient;
 };
-
-// Use a faster model for less critical tasks
-const FAST_MODEL = "gpt-4-turbo-preview"; // Could be replaced with gpt-3.5-turbo for even faster performance
-const DEFAULT_MODEL = "gpt-4-turbo-preview";
 
 /**
  * Generate a research response using GPT-4 Turbo with ReAct-style reasoning
  */
 export async function generateResearchResponse(
   query: string,
-  initialSearchResults: SearchResult[]
+  initialSearchResults: SearchResult[],
+  previousContext: string = ""
 ): Promise<AgentResponse> {
   console.time('llm-total');
   const openai = initOpenAI();
@@ -42,7 +32,7 @@ export async function generateResearchResponse(
   try {
     // Step 1: Planning - Initial thought about how to approach the query
     console.time('planning-step');
-    const planningStep = await generatePlanningStep(openai, query, initialSearchResults);
+    const planningStep = await generatePlanningStep(openai, query, initialSearchResults, previousContext);
     console.timeEnd('planning-step');
     traceSteps.push(planningStep);
     
@@ -54,7 +44,7 @@ export async function generateResearchResponse(
     
     // Step 3: Generate final output with reflection
     console.time('final-output');
-    const finalOutput = await generateFinalOutput(openai, query, traceSteps);
+    const finalOutput = await generateFinalOutput(openai, query, traceSteps, previousContext);
     console.timeEnd('final-output');
     
     return {
@@ -72,19 +62,24 @@ export async function generateResearchResponse(
 async function generatePlanningStep(
   openai: OpenAI,
   query: string,
-  searchResults: SearchResult[]
+  searchResults: SearchResult[],
+  previousContext: string = ""
 ): Promise<AgentTraceStep> {
+  const contextSection = previousContext ? 
+    `\nPrevious conversation context:\n${previousContext}\n\nThis appears to be a follow-up question. Consider the previous context when planning your research.` : 
+    '';
+
   const planningPrompt = `
 You are a research agent tasked with answering: "${query}"
 
 Below are initial search results:
 ${searchResults.map((r, i) => `${i+1}. ${r.title} - ${r.link}`).join('\n')}
 
-Create a plan for how you'll approach this research question. What are the key aspects to investigate?
+Create a plan for how you'll approach this research question. What are the key aspects to investigate?${contextSection}
 `;
 
   const response = await openai.chat.completions.create({
-    model: FAST_MODEL,
+    model: "gpt-4-turbo-preview",
     messages: [
       {
         role: "system",
@@ -116,16 +111,12 @@ async function performIterativeResearch(
   originalQuery: string,
   plan: string,
   traceSteps: AgentTraceStep[],
-  maxIterations: number = 2
+  maxIterations: number = 3
 ): Promise<void> {
-  // Reduce iterations to improve performance
+  // We'll do up to 3 iterations of search and refinement
   for (let i = 0; i < maxIterations; i++) {
-    console.time(`iteration-${i+1}`);
-    
     // Generate a refined search query based on previous steps
-    console.time(`refined-query-${i+1}`);
     const refinedQuery = await generateRefinedQuery(openai, originalQuery, traceSteps);
-    console.timeEnd(`refined-query-${i+1}`);
     
     // Perform the search with the refined query
     const searchStep: AgentTraceStep = {
@@ -138,17 +129,13 @@ async function performIterativeResearch(
     
     try {
       // Execute the search
-      console.time(`search-execution-${i+1}`);
       const searchResults = await performSearch(refinedQuery);
-      console.timeEnd(`search-execution-${i+1}`);
       
       // Update the observation with search results
       searchStep.observation = `Found ${searchResults.length} results for refined query.`;
       
       // Analyze the results and determine if they're helpful
-      console.time(`analysis-${i+1}`);
       const analysisStep = await analyzeSearchResults(openai, refinedQuery, searchResults, traceSteps);
-      console.timeEnd(`analysis-${i+1}`);
       traceSteps.push(analysisStep);
       
       // If the analysis indicates we have enough information, break the loop
@@ -160,8 +147,6 @@ async function performIterativeResearch(
       console.error("Error during search iteration:", error);
       searchStep.observation = "Error occurred during search.";
       break;
-    } finally {
-      console.timeEnd(`iteration-${i+1}`);
     }
   }
 }
@@ -174,17 +159,14 @@ async function generateRefinedQuery(
   originalQuery: string,
   traceSteps: AgentTraceStep[]
 ): Promise<string> {
-  // Use only the most recent steps to reduce context size
-  const recentSteps = traceSteps.slice(-3);
-  
-  const traceContext = recentSteps.map((step, i) => 
-    `Step ${traceSteps.length - recentSteps.length + i + 1}:\nThought: ${step.thought}\nAction: ${step.action}\nObservation: ${step.observation}\nReflection: ${step.reflection || 'N/A'}`
+  const traceContext = traceSteps.map((step, i) => 
+    `Step ${i+1}:\nThought: ${step.thought}\nAction: ${step.action}\nObservation: ${step.observation}\nReflection: ${step.reflection || 'N/A'}`
   ).join('\n\n');
   
   const refinementPrompt = `
 Original query: "${originalQuery}"
 
-Recent research progress:
+Research progress so far:
 ${traceContext}
 
 Based on the research so far, generate a refined search query that will help gather more specific 
@@ -194,7 +176,7 @@ Output only the new search query text without any other explanation.
 `;
 
   const response = await openai.chat.completions.create({
-    model: FAST_MODEL,
+    model: "gpt-4-turbo-preview",
     messages: [
       {
         role: "system",
@@ -206,7 +188,6 @@ Output only the new search query text without any other explanation.
       },
     ],
     temperature: 0.7,
-    max_tokens: 100 // Limit token usage for faster response
   });
 
   return response.choices[0]?.message?.content?.trim() || originalQuery;
@@ -221,17 +202,14 @@ async function analyzeSearchResults(
   searchResults: SearchResult[],
   traceSteps: AgentTraceStep[]
 ): Promise<AgentTraceStep> {
-  // Limit the number of results to analyze to save tokens
-  const resultsToAnalyze = searchResults.slice(0, 5);
-  
-  const resultsContext = resultsToAnalyze.map((r, i) => 
+  const resultsContext = searchResults.map((r, i) => 
     `Result ${i+1}:\nTitle: ${r.title}\nURL: ${r.link}\nSnippet: ${r.snippet}`
   ).join('\n\n');
   
   const analysisPrompt = `
 Search query: "${query}"
 
-Top search results:
+Search results:
 ${resultsContext}
 
 Analyze these search results. How relevant are they to our research question? 
@@ -240,7 +218,7 @@ or should we search for something else?
 `;
 
   const response = await openai.chat.completions.create({
-    model: FAST_MODEL,
+    model: "gpt-4-turbo-preview",
     messages: [
       {
         role: "system",
@@ -252,7 +230,6 @@ or should we search for something else?
       },
     ],
     temperature: 0.7,
-    max_tokens: 300 // Limit token usage for faster response
   });
 
   const analysis = response.choices[0]?.message?.content || "No analysis generated.";
@@ -271,7 +248,8 @@ or should we search for something else?
 async function generateFinalOutput(
   openai: OpenAI,
   originalQuery: string,
-  traceSteps: AgentTraceStep[]
+  traceSteps: AgentTraceStep[],
+  previousContext: string = ""
 ): Promise<string> {
   // Include only essential steps to reduce context size
   const essentialSteps = [
@@ -285,11 +263,16 @@ async function generateFinalOutput(
     `Step ${i+1}:\nThought: ${step.thought}\nAction: ${step.action}\nObservation: ${step.observation}\nReflection: ${step.reflection || 'N/A'}`
   ).join('\n\n');
   
+  // Add previous conversation context if available
+  const contextSection = previousContext ? 
+    `\n\nPrevious conversation context:\n${previousContext}\n\nThis appears to be a follow-up question. Ensure your response builds on the previous conversation.` : 
+    '';
+  
   const finalPrompt = `
 Original research question: "${originalQuery}"
 
 Key research insights:
-${traceContext}
+${traceContext}${contextSection}
 
 Based on these research insights, generate a comprehensive answer to the original question.
 Your answer should:
@@ -303,7 +286,7 @@ Respond directly to the question without disclaimers about the research process.
 `;
 
   const response = await openai.chat.completions.create({
-    model: DEFAULT_MODEL, // Use the higher quality model for the final output
+    model: "gpt-4-turbo-preview",
     messages: [
       {
         role: "system",
