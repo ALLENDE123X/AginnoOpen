@@ -247,7 +247,7 @@ export default function Home() {
                         placeholder={
                           messages.length > 0
                             ? "Ask a follow-up question..."
-                            : "Ask a research question..."
+                            : "Try: What are the latest developments in AI safety research?"
                         }
                         className="flex-1"
                         disabled={isLoading}
