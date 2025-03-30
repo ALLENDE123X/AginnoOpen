@@ -224,6 +224,40 @@ export default function Home() {
               </p>
             </Card>
             
+            {/* How to Use card */}
+            <Card className="p-6">
+              <h2 className="text-xl font-medium mb-3">How to Use</h2>
+              <div className="text-sm text-muted-foreground space-y-3">
+                <div>
+                  <h3 className="font-medium text-foreground">Response Time</h3>
+                  <p>Responses may take up to 5 minutes to generate. The agent follows a thorough process:</p>
+                  <ol className="list-decimal pl-5 mt-1 space-y-1">
+                    <li>Reasoning how to approach your research question</li>
+                    <li>Searching the web for relevant information</li>
+                    <li>Analyzing the search results</li>
+                    <li>Iterating this process until it has enough information</li>
+                    <li>Synthesizing a final response</li>
+                  </ol>
+                </div>
+                
+                <div>
+                  <h3 className="font-medium text-foreground">Response Quality</h3>
+                  <p>
+                    Responses are not the most in-depth as the agent uses a miniature model (GPT-4o Turbo Mini) for cost efficiency. 
+                    This is meant to serve as a proof of concept for more sophisticated AI research agents.
+                  </p>
+                </div>
+                
+                <div>
+                  <h3 className="font-medium text-foreground">Agent Trace</h3>
+                  <p>
+                    You can view the agent's reasoning process by clicking on the "Agent Trace" tab after receiving a response. 
+                    This shows you the step-by-step thinking and actions taken by the AI.
+                  </p>
+                </div>
+              </div>
+            </Card>
+            
             <Card className="p-6">
               <Tabs defaultValue="chat" className="w-full">
                 <TabsList className="mb-4">
