@@ -279,7 +279,10 @@ export default function Home() {
 
       <footer className="py-4 border-t">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Aginno Open. All rights reserved.
+          © {new Date().getFullYear()} Aginno Open. All rights reserved. 
+          <div className="mt-1">
+            Developed by <a href="https://www.linkedin.com/in/pranav-lende/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Pranav Lende</a>
+          </div>
         </div>
       </footer>
     </div>
