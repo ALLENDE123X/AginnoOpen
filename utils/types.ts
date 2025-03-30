@@ -6,7 +6,6 @@ export interface AgentTraceStep {
   action: string;
   observation: string;
   reflection?: string;
-  timestamp?: number;
 }
 
 // Complete agent response including all trace steps and final output

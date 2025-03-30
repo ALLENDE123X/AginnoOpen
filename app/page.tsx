@@ -9,26 +9,21 @@ import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { cn } from "@/lib/utils"
+import { AgentOutput } from "@/components/AgentOutput"
+import { AgentTrace } from "@/components/AgentTrace"
 import { ChatHistory } from "@/components/ChatHistory"
 import { LoadingSpinner } from "@/components/LoadingSpinner"
-import { ChatContainer } from "@/components/ChatContainer"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AgentResponse, AgentTraceStep, ChatHistoryEntry } from "@/utils/types"
-import { useAgentProgress } from "@/utils/useAgentProgress"
 
 export default function Home() {
   const [query, setQuery] = useState("")
   const [currentAgentResponse, setCurrentAgentResponse] = useState<AgentResponse | null>(null)
+  const [traceSteps, setTraceSteps] = useState<AgentTraceStep[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [currentChatId, setCurrentChatId] = useState<string | null>(null)
   const [chatHistory, setChatHistory] = useState<ChatHistoryEntry[]>([])
-  
-  // Use the agent progress hook to get real-time updates
-  const { traceSteps, currentStep, progress } = useAgentProgress({
-    chatId: currentChatId,
-    query,
-    isLoading,
-  });
   
   // Fetch chat history on component mount
   useEffect(() => {
@@ -56,12 +51,9 @@ export default function Home() {
     setIsLoading(true)
     setError(null)
     setCurrentAgentResponse(null)
+    setTraceSteps([])
 
     try {
-      // Start fetching the response
-      const controller = new AbortController();
-      const signal = controller.signal;
-      
       const response = await fetch("/api/ask", {
         method: "POST",
         headers: {
@@ -71,7 +63,6 @@ export default function Home() {
           query,
           chatId: currentChatId
         }),
-        signal,
       });
 
       if (!response.ok) {
@@ -79,12 +70,10 @@ export default function Home() {
         throw new Error(data.error || "Failed to get response");
       }
       
-      // Parse the main response
       const data = await response.json();
       setCurrentChatId(data.chatId);
-      
-      // Update final response
       setCurrentAgentResponse(data.response);
+      setTraceSteps(data.response.traceSteps);
       
       // Refresh chat history
       fetchChatHistory();
@@ -103,6 +92,7 @@ export default function Home() {
   const handleClear = () => {
     setQuery("")
     setCurrentAgentResponse(null)
+    setTraceSteps([])
     setCurrentChatId(null)
     setError(null)
   }
@@ -111,12 +101,8 @@ export default function Home() {
     setCurrentChatId(chat.id);
     setQuery(chat.query);
     setCurrentAgentResponse(chat.response);
+    setTraceSteps(chat.response.traceSteps);
   };
-
-  // Create an agent response with the real-time trace steps
-  const combinedAgentResponse: AgentResponse | null = currentAgentResponse || (traceSteps.length > 0 
-    ? { traceSteps, finalOutput: "" } 
-    : null);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -164,7 +150,7 @@ export default function Home() {
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Researching {isLoading && progress > 0 ? `(${progress}%)` : ''}
+                        Researching
                       </>
                     ) : (
                       "Submit"
@@ -175,7 +161,7 @@ export default function Home() {
                     variant="outline"
                     size="lg"
                     onClick={handleClear}
-                    disabled={isLoading || (!query && !combinedAgentResponse && !error)}
+                    disabled={isLoading || (!query && !currentAgentResponse && !error)}
                   >
                     Clear
                   </Button>
@@ -183,21 +169,37 @@ export default function Home() {
               </div>
             </form>
             
-            {/* Chat container with integrated agent trace */}
-            <Card className="min-h-[300px]">
-              {error ? (
-                <div className="text-red-500 flex items-center justify-center h-full p-6">
-                  {error}
-                </div>
-              ) : (
-                <ChatContainer
-                  query={query}
-                  agentResponse={combinedAgentResponse}
-                  isLoading={isLoading}
-                  currentStep={currentStep}
-                />
-              )}
-            </Card>
+            {/* Agent trace and response */}
+            {(traceSteps.length > 0 || isLoading || error || currentAgentResponse) && (
+              <Tabs defaultValue="response" className="w-full">
+                <TabsList className="mb-4">
+                  <TabsTrigger value="response">Response</TabsTrigger>
+                  <TabsTrigger value="trace">Agent Trace</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="response">
+                  <Card className={cn("p-6 min-h-[300px] transition-all", isLoading && "bg-muted/50")}>
+                    {isLoading ? (
+                      <div className="flex items-center justify-center h-full">
+                        <LoadingSpinner size={8} />
+                      </div>
+                    ) : error ? (
+                      <div className="text-red-500 flex items-center justify-center h-full">
+                        {error}
+                      </div>
+                    ) : (
+                      <AgentOutput agentResponse={currentAgentResponse} />
+                    )}
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="trace">
+                  <Card className="p-6 min-h-[300px]">
+                    <AgentTrace traceSteps={traceSteps} isLoading={isLoading} />
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            )}
           </div>
         </div>
       </main>

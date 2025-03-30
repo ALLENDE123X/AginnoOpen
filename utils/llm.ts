@@ -81,8 +81,7 @@ Create a plan for how you'll approach this research question. What are the key a
     thought: "I need to plan how to approach this research question.",
     action: `Initial planning for query: "${query}"`,
     observation: "Received initial search results and created a research plan.",
-    reflection: plan,
-    timestamp: Date.now()
+    reflection: plan
   };
 }
 
@@ -105,7 +104,6 @@ async function performIterativeResearch(
       thought: `I need to search for more specific information about this topic.`,
       action: `Searching for: "${refinedQuery}"`,
       observation: "Waiting for search results...",
-      timestamp: Date.now()
     };
     
     traceSteps.push(searchStep);
@@ -205,7 +203,7 @@ or should we search for something else?
     messages: [
       {
         role: "system",
-        content: "You are a helpful research agent that analyzes search results.",
+        content: "You are a helpful research agent that analyzes search results for relevance and information value.",
       },
       {
         role: "user",
@@ -218,11 +216,10 @@ or should we search for something else?
   const analysis = response.choices[0]?.message?.content || "No analysis generated.";
   
   return {
-    thought: "I need to analyze these search results to see if they provide useful information.",
-    action: `Analyzing results for search query: "${query}"`,
-    observation: `Analyzed ${searchResults.length} search results.`,
-    reflection: analysis,
-    timestamp: Date.now()
+    thought: "I need to evaluate if these search results are helpful for my research.",
+    action: `Analyzing results from query: "${query}"`,
+    observation: `Analyzed ${searchResults.length} search results for relevance.`,
+    reflection: analysis
   };
 }
 

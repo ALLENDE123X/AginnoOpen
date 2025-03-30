@@ -48,20 +48,17 @@ const ChatHistoryItem: React.FC<ChatHistoryItemProps> = ({
   isSelected,
   onClick,
 }) => {
-  // Create a truncated summary of the title
-  const truncatedTitle =
-    chat.title.length > 60 ? `${chat.title.substring(0, 57)}...` : chat.title;
+  // Create a truncated summary of the query
+  const truncatedQuery =
+    chat.query.length > 60 ? `${chat.query.substring(0, 57)}...` : chat.query;
   
   // Get formatted date
-  const date = new Date(chat.createdAt);
+  const date = new Date(chat.timestamp);
   const formattedDate = date.toLocaleDateString();
   const formattedTime = date.toLocaleTimeString(undefined, {
     hour: "2-digit",
     minute: "2-digit",
   });
-
-  // Get message count
-  const messageCount = chat.messages.length;
 
   return (
     <Card
@@ -71,14 +68,14 @@ const ChatHistoryItem: React.FC<ChatHistoryItemProps> = ({
       onClick={onClick}
     >
       <div className="flex justify-between items-start">
-        <h4 className="font-medium text-sm">{truncatedTitle}</h4>
+        <h4 className="font-medium text-sm">{truncatedQuery}</h4>
         <span className="text-xs text-muted-foreground">
           {formattedDate}, {formattedTime}
         </span>
       </div>
       
       <div className="text-xs text-muted-foreground mt-1">
-        {messageCount} messages
+        {chat.response.traceSteps.length} search steps
       </div>
     </Card>
   );
