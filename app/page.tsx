@@ -171,7 +171,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="flex-1 container mx-auto px-4 py-4 overflow-hidden flex">
+      <main className="flex-1 container mx-auto px-4 py-4 overflow-auto flex">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 h-full w-full">
           {/* Left sidebar - Chat history */}
           <div className="col-span-1 h-full overflow-y-auto">
@@ -188,15 +188,15 @@ export default function Home() {
           {/* Main content area */}
           <div className="col-span-1 md:col-span-3 flex flex-col h-full">
             {/* Chat area with messages and traces */}
-            <div className="flex-1 overflow-y-auto mb-4 relative">
-              <Card className="p-4 min-h-full">
+            <div className="flex-1 overflow-y-auto mb-4 relative max-h-[calc(100vh-250px)]">
+              <Card className="p-4 h-full">
                 {/* Chat Messages and Traces */}
                 {(!currentAgentResponse && !isLoading && !error) ? (
                   <div className="text-center text-muted-foreground flex items-center justify-center h-full">
                     Enter a research query to get started
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-4 overflow-y-auto h-full">
                     {error ? (
                       <div className="text-red-500 p-4 border rounded-md">
                         {error}
