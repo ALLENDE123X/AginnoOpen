@@ -173,8 +173,8 @@ export default function Home() {
         <div className="container mx-auto py-6 px-4 flex justify-between items-center">
           <div className="flex-1" />
           <div className="text-center flex-1">
-            <h1 className="text-2xl font-semibold">Research Agent</h1>
-            <p className="text-sm text-muted-foreground mt-1">Your personal AI assistant for deep web research</p>
+            <h1 className="text-2xl font-semibold">Aginno Open</h1>
+            <p className="text-sm text-muted-foreground mt-1">First iteration of a general purpose AI agent</p>
           </div>
           <div className="flex-1 flex justify-end">
             <ThemeToggle />
@@ -203,6 +203,27 @@ export default function Home() {
           
           {/* Main content area */}
           <div className="col-span-1 md:col-span-3 space-y-6">
+            {/* Project description card */}
+            <Card className="p-6">
+              <h2 className="text-xl font-medium mb-3">About Aginno Open</h2>
+              <p className="text-sm text-muted-foreground mb-2">
+                This is a first iteration of a general purpose AI agent with currently limited capabilities:
+              </p>
+              <ul className="text-sm text-muted-foreground list-disc pl-5 mb-4 space-y-1">
+                <li>Limited to analysis, planning, and web search tools</li>
+                <li>Uses the GPT-4o Turbo Mini model for cost efficiency</li>
+                <li>Implements a ReAct agent loop for reasoning and action</li>
+              </ul>
+              <p className="text-sm text-muted-foreground mb-4">
+                This serves as a demo for an eventual general purpose AI agent that would have access to a wide variety of tools, 
+                long term memory store, multiple models (both next-token and reasoning), and multiple agent loops frameworks.
+              </p>
+              <p className="text-sm font-medium">
+                Note: If the chat randomly stops working, it's likely due to exceeding the API limit. 
+                Please send a DM on LinkedIn for a quick fix.
+              </p>
+            </Card>
+            
             <Card className="p-6">
               <Tabs defaultValue="chat" className="w-full">
                 <TabsList className="mb-4">
@@ -258,7 +279,7 @@ export default function Home() {
 
       <footer className="py-4 border-t">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Research Agent. All rights reserved.
+          © {new Date().getFullYear()} Aginno Open. All rights reserved.
         </div>
       </footer>
     </div>
