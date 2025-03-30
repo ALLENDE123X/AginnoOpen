@@ -211,7 +211,7 @@ export default function Home() {
               </p>
               <ul className="text-sm text-muted-foreground list-disc pl-5 mb-4 space-y-1">
                 <li>Limited to analysis, planning, and web search tools</li>
-                <li>Uses the GPT-4o Turbo Mini model for cost efficiency</li>
+                <li>Uses the GPT-4o Mini model for cost efficiency</li>
                 <li>Implements a ReAct agent loop for reasoning and action</li>
               </ul>
               <p className="text-sm text-muted-foreground mb-4">
@@ -227,35 +227,18 @@ export default function Home() {
             {/* How to Use card */}
             <Card className="p-6">
               <h2 className="text-xl font-medium mb-3">How to Use</h2>
-              <div className="text-sm text-muted-foreground space-y-3">
-                <div>
-                  <h3 className="font-medium text-foreground">Response Time</h3>
-                  <p>Responses may take up to 5 minutes to generate. The agent follows a thorough process:</p>
-                  <ol className="list-decimal pl-5 mt-1 space-y-1">
-                    <li>Reasoning how to approach your research question</li>
-                    <li>Searching the web for relevant information</li>
-                    <li>Analyzing the search results</li>
-                    <li>Iterating this process until it has enough information</li>
-                    <li>Synthesizing a final response</li>
-                  </ol>
-                </div>
-                
-                <div>
-                  <h3 className="font-medium text-foreground">Response Quality</h3>
-                  <p>
-                    Responses are not the most in-depth as the agent uses a miniature model (GPT-4o Turbo Mini) for cost efficiency. 
-                    This is meant to serve as a proof of concept for more sophisticated general-purpose AI agents.
-                  </p>
-                </div>
-                
-                <div>
-                  <h3 className="font-medium text-foreground">Agent Trace</h3>
-                  <p>
-                    You can view the agent's reasoning process by clicking on the "Agent Trace" tab after receiving a response. 
-                    This shows you the step-by-step thinking and actions taken by the Agent.
-                  </p>
-                </div>
-              </div>
+              <ol className="text-sm text-muted-foreground list-decimal pl-5 mb-4 space-y-2">
+                <li>Type your research question in the input box below</li>
+                <li>Wait for the agent to search the web and analyze results</li>
+                <li>Review the detailed answer provided by the AI</li>
+                <li>Ask follow-up questions to explore the topic further</li>
+                <li>Check the "Agent Trace" tab to see the AI's thought process</li>
+              </ol>
+              <p className="text-sm text-muted-foreground">
+                For best results, ask specific questions about topics that can be researched online.
+                The agent works best with factual queries rather than opinion-based questions.
+                Please note that responses may take up to 5 minutes to return, especially for complex research questions.
+              </p>
             </Card>
             
             <Card className="p-6">
@@ -281,7 +264,7 @@ export default function Home() {
                         placeholder={
                           messages.length > 0
                             ? "Ask a follow-up question..."
-                            : "Try: What are the latest developments in AI safety research?"
+                            : "Ask a research question..."
                         }
                         className="flex-1"
                         disabled={isLoading}
@@ -313,10 +296,7 @@ export default function Home() {
 
       <footer className="py-4 border-t">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Aginno Open. All rights reserved. 
-          <div className="mt-1">
-            Developed by <a href="https://www.linkedin.com/in/pranav-lende/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Pranav Lende</a>
-          </div>
+          © {new Date().getFullYear()} Aginno Open. All rights reserved.
         </div>
       </footer>
     </div>

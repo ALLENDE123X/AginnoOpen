@@ -7,7 +7,7 @@ import { AgentResponse } from "@/utils/types";
 // Set a timeout for the entire request
 const REQUEST_TIMEOUT = 180000; // Increased from 90000 to 180000 (3 minutes)
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<Response> {
   try {
     console.time('ask-api-total');
     const { query, chatId } = await request.json();
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       });
       
       // Race the API response against the timeout
-      const response = await Promise.race([responsePromise, timeoutPromise]);
+      const response = await Promise.race([responsePromise, timeoutPromise]) as Response;
       return response;
     } catch (error) {
       console.error("Error processing request:", error);
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Separate function to process the query for better organization
-async function processQuery(query: string, chatId: string) {
+async function processQuery(query: string, chatId: string): Promise<NextResponse> {
   console.time('search');
   // 1. Perform initial web search
   const searchResults = await performSearch(query);
