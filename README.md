@@ -1,6 +1,6 @@
 # Aginno Open
 
-A general-purpose AI agent framework, starting with an intelligent web research assistant. Powered by GPT-4 and Serper.dev.
+A general-purpose AI agent framework, starting with an intelligent web research assistant. Powered by GPT-4o Mini and Serper.dev.
 
 ## 🧠 Project Overview
 
@@ -17,7 +17,7 @@ This is the first step toward a larger vision: building autonomous, modular, and
 - Next.js 14 (App Router)
 - TypeScript
 - Tailwind CSS
-- OpenAI GPT-4 Turbo
+- OpenAI GPT-4o Mini
 - Serper.dev (Google Search API)
 - V0.dev for frontend scaffolding
 - Cursor.sh for backend agent development
