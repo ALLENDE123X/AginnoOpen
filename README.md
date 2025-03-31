@@ -45,17 +45,12 @@ npm run dev
 
 ## 🧪 Current Features
 
-✅ Simple text input for user research requests
-
-✅ GPT-4 ReAct-style prompting
-
-✅ Web search results via Serper.dev
-
-✅ Markdown output (bullets, links, reflection)
-
-✅ Clean UI via V0.dev export
-
-✅ Modular file structure for easy expansion
+✅ Simple text input for user research requests  
+✅ GPT-4 ReAct-style prompting  
+✅ Web search results via Serper.dev  
+✅ Markdown output (bullets, links, reflection)  
+✅ Clean UI via V0.dev export  
+✅ Modular file structure for easy expansion  
 
 ## 🧭 Project Roadmap
 
