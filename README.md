@@ -54,14 +54,14 @@ npm run dev
 
 ## 🧭 Project Roadmap
 
-☑️ MVP: Research agent (done)
-🔄 Tool expansion (e.g., calculators, summarizers, file readers)
-🔄 Add planning memory + reflection loop
-🔄 Multi-turn tasks with goals/subgoals
-🔄 Model switching based on task type
-🔄 Agent "personality" profiles and skill templates
-🔄 User accounts and agent history
-🔄 Agent marketplace and sharing
+☑️ MVP: Research agent (done)  
+🔄 Tool expansion (e.g., calculators, summarizers, file readers)  
+🔄 Add planning memory + reflection loop  
+🔄 Multi-turn tasks with goals/subgoals  
+🔄 Model switching based on task type  
+🔄 Agent "personality" profiles and skill templates  
+🔄 User accounts and agent history  
+🔄 Agent marketplace and sharing  
 
 ## 🤝 Contributing
 
